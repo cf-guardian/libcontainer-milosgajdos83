@@ -303,8 +303,9 @@ func (s *NetlinkSocket) Close() {
 
 // request ToWireFormat()
 func (s *NetlinkSocket) Send(request *NetlinkRequest) error {
+	fmt.Printf("Netlink request: %v\n", request)
 	req := request.ToWireFormat()
-	fmt.Printf("Netlink request:\n%s\n", hex.Dump(req))
+	fmt.Printf("Netlink raw request:\n%s\n", hex.Dump(req))
 	if err := syscall.Sendto(s.fd, req, 0, &s.lsa); err != nil {
 		return err
 	}
@@ -321,7 +322,7 @@ func (s *NetlinkSocket) Receive() ([]syscall.NetlinkMessage, error) {
 		return nil, ErrShortResponse
 	}
 	rb = rb[:nr]
-	fmt.Printf("Netlink response:\n%s\n", hex.Dump(rb))
+	fmt.Printf("Netlink raw response:\n%s\n", hex.Dump(rb))
 
 	return syscall.ParseNetlinkMessage(rb)
 }
