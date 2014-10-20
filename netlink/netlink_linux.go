@@ -2,6 +2,7 @@ package netlink
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"net"
 	"sync/atomic"
@@ -302,7 +303,9 @@ func (s *NetlinkSocket) Close() {
 
 // request ToWireFormat()
 func (s *NetlinkSocket) Send(request *NetlinkRequest) error {
-	if err := syscall.Sendto(s.fd, request.ToWireFormat(), 0, &s.lsa); err != nil {
+	req := request.ToWireFormat()
+	fmt.Printf("Netlink request:\n%s\n", hex.Dump(req))
+	if err := syscall.Sendto(s.fd, req, 0, &s.lsa); err != nil {
 		return err
 	}
 	return nil
@@ -318,6 +321,8 @@ func (s *NetlinkSocket) Receive() ([]syscall.NetlinkMessage, error) {
 		return nil, ErrShortResponse
 	}
 	rb = rb[:nr]
+	fmt.Printf("Netlink response:\n%s\n", hex.Dump(rb))
+
 	return syscall.ParseNetlinkMessage(rb)
 }
 
@@ -553,6 +558,8 @@ func NetworkSetMTU(iface *net.Interface, mtu int) error {
 
 	data := newRtAttr(syscall.IFLA_MTU, b)
 	wb.AddData(data)
+
+	fmt.Printf("wb: %v\n", wb)
 
 	if err := s.Send(wb); err != nil {
 		return err
